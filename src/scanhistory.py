@@ -17,7 +17,7 @@ def add_scanhistory(scanner: str, target: str):
         writer.writerow([scanner, target, int(timestamp * 1000)])  # store timestamp in milliseconds
 
 
-def get_scanhistory() -> list[dict]:
+def get_scanhistory(limit: int = 100) -> list[dict]:
     """
     Retrieve the scan history from the CSV file.
 
@@ -27,9 +27,16 @@ def get_scanhistory() -> list[dict]:
     try:
         with open(HISTORY_CSV, mode='r', newline='') as file:
             reader = csv.reader(file)
+            i = 0
             for row in reader:
-                if len(row) == 2:
-                    history.append({'scanner': row[0], 'target': row[1]})
+                if len(row) >= 2:
+                    history.append({'scanner': row[0], 'target': row[1], 'timestamp': row[2]})
+                else:
+                    print("Malformed scan history entry:", row)
+
+                i = i + 1
+                if limit > 0 and i >= limit:
+                    break
     except FileNotFoundError:
         pass  # No history file yet
     return history
