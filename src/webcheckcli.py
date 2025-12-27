@@ -1,12 +1,12 @@
 import argparse
 import asyncio
+import inspect
 import json
 import socket
 import time
 from pathlib import Path
 from urllib.parse import urlparse
 
-from webcheck.ssl_qualys import qualys_sslchecker_handler
 from webcheck.util.cache_helper import cache_read, cache_write
 from webcheck.carbon import carbon_handler
 from webcheck.conf import WEBCHECK_DATA_DIR, WEBCHECK_CACHE_TTL_SEC
@@ -89,7 +89,7 @@ def invoke_cached(cache_key, handler_func, ttl=60):
             else:
                 print(f"!!!!Cache expired for key {key}")
 
-        if asyncio.iscoroutinefunction(handler_func):
+        if inspect.iscoroutinefunction(handler_func):
             result = asyncio.run(handler_func(*args, **kwargs))
         else:
             result = handler_func(*args, **kwargs)
@@ -102,7 +102,9 @@ def invoke_cached(cache_key, handler_func, ttl=60):
 
 
 def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
-    
+    if '://' in domain:
+        domain = domain.split("://", 1)[1].split("/")[0]
+
     schema = "https" if use_tls else "http"
     url = f"{schema}://{domain}"
     scan_result = {
