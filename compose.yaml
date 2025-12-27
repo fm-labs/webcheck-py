@@ -1,0 +1,71 @@
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "18000:8000"
+    networks:
+      - webcheck-net
+    volumes:
+      - ${PWD}/data:/data
+    environment:
+      - USE_MONGODB=true
+      - MONGODB_URL=mongodb://webcheck:webcheck@mongodb:27017?authSource=admin
+      - MONGODB_DB_NAME=webcheck
+      - MONGODB_QUEUE_COLLECTION_NAME=queue
+    depends_on:
+      - mongodb
+#    develop:
+#      watch:
+#        - action: sync+exec
+#          path: ./src
+#          target: /app/src
+#          ignore:
+#            - "__pycache__/"
+#            - "*.pyc"
+#            - "*.egg-info/"
+#            - "x*.py"
+#          exec:
+#            command: ["supervisorctl", "restart", "all"]
+#        - action: rebuild
+#          path: ./container
+#        - action: rebuild
+#          path: ./uv.lock
+#        - action: rebuild
+#          path: Containerfile
+
+#  redis:
+#    image: redis:latest
+#    ports:
+#      - "6379:6379"
+#    #expose:
+#    #  - "6379"
+#    networks:
+#      - webcheck-net
+#    volumes:
+#      - redis-data:/data
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "18017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=webcheck
+      - MONGO_INITDB_ROOT_PASSWORD=webcheck
+      - MONGO_INITDB_ROOT_AUTHENTICATION_DATABASE=admin
+    networks:
+      - webcheck-net
+    volumes:
+      - ${PWD}/volumes/mongodb:/data/db
+
+
+#volumes:
+#  mongo-data:
+#    driver: local
+
+networks:
+  webcheck-net:
+    driver: bridge
+    name: webcheck-net

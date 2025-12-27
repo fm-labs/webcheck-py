@@ -1,5 +1,6 @@
 import csv
 import time
+from collections import deque
 
 HISTORY_CSV = "data/scanhistory.csv"
 
@@ -25,18 +26,14 @@ def get_scanhistory(limit: int = 1000) -> list[dict]:
     """
     history = []
     try:
-        with open(HISTORY_CSV, mode='r', newline='') as file:
+        with open(HISTORY_CSV, mode='r') as file:
             reader = csv.reader(file)
-            i = 0
-            for row in reader:
+            last_rows = deque(reader, maxlen=limit)
+            for row in last_rows:
                 if len(row) >= 2:
                     history.append({'scanner': row[0], 'target': row[1], 'timestamp': row[2]})
                 else:
                     print("Malformed scan history entry:", row)
-
-                i = i + 1
-                if limit > 0 and i >= limit:
-                    break
     except FileNotFoundError:
         pass  # No history file yet
     return history
@@ -50,11 +47,11 @@ def get_last_scans_by_type(scanner: str, limit: int = 10) -> list[str]:
     :param limit: The maximum number of entries to return.
     :return: A list of target strings.
     """
-    history = get_scanhistory()
+    history = get_scanhistory(limit)
     filtered = [entry['target'] for entry in history if entry['scanner'] == scanner]
-
     # remove duplicates while preserving order
     seen = set()
     filtered = [x for x in filtered if not (x in seen or seen.add(x))]
-
-    return filtered[-limit:]
+    # reverse to get most recent first and limit
+    filtered = list(reversed(filtered))[:limit]
+    return filtered

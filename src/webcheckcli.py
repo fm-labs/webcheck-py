@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import inspect
 import json
+import os
 import socket
 import time
 from pathlib import Path
@@ -9,7 +10,7 @@ from urllib.parse import urlparse
 
 from webcheck.util.cache_helper import cache_read, cache_write
 from webcheck.carbon import carbon_handler
-from webcheck.conf import WEBCHECK_DATA_DIR, WEBCHECK_CACHE_TTL_SEC
+from webcheck.conf import WEBCHECK_DATA_DIR, WEBCHECK_CACHE_TTL_SEC, USE_MONGODB
 from webcheck.util.content_helper import clear_url_cache, build_host_url_cache_key, reverse_domain_path
 from webcheck.util.content_helper import get_url_content
 from webcheck.dns import dns_handler
@@ -30,9 +31,11 @@ from webcheck.social_tags import social_tags_handler
 from webcheck.ssl import ssl_handler
 from webcheck.status import status_handler
 from webcheck.rank import rank_handler
+from webcheck.util.mongodb_queue import JobQueue, SimpleInMemoryQueue
 from webcheck.wappalyzer import wappalyzer_handler
 from webcheck.whois import whois_handler
 from scanhistory import add_scanhistory
+from webcheck.util.mongodb_helper import mongodb_upsert_domain_scan, mongodb_get_last_scans_by_type
 
 
 def get_ip_address(domain):
@@ -141,6 +144,9 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
     #    print(scan_result)
     #    exit(1)
 
+    # todo
+    # probe the host and index page to
+    # pre-fetch and cache the host url content
 
     # Host based handlers
     host_handlers = {
@@ -208,6 +214,8 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
 
     scan_ended_at = time.time() * 1000
     scan_metadata = {
+        'type': 'domain',
+        'target': domain,
         'status': 'completed',
         'message': 'Scan completed successfully. Took {} ms'.format(int(scan_ended_at - scan_started_at)),
         'started_at': int(scan_started_at),
@@ -220,11 +228,7 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
     clear_url_cache()
 
     # dump the result to file
-    #print(json.dumps(scan_result, indent=2))
-    filename = f"{WEBCHECK_DATA_DIR}/webcheck/{domain}/scan_result.json"
-    Path(filename).parent.mkdir(parents=True, exist_ok=True)
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(scan_result, f, indent=2)
+    save_scan_result(domain, scan_result)
 
     # add to scan history
     add_scanhistory("domain", domain)
@@ -235,6 +239,15 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
 domains_queued: set[tuple[str,int]] = set()
 domains_scanned: set[str] = set()
 domains_failed: set[str] = set()
+
+job_queue_handler = SimpleInMemoryQueue
+job_queue = None
+
+def get_queue() -> JobQueue:
+    global job_queue
+    if not job_queue:
+        job_queue = job_queue_handler()
+    return job_queue
 
 def add_to_queue(domain, depth=0):
     global domains_queued
@@ -252,8 +265,24 @@ def get_next_from_queue(max_depth=-1):
             return domain, depth
     return None, None
 
+def save_scan_result(domain, scan_result):
+    filename = f"{WEBCHECK_DATA_DIR}/webcheck/{domain}/scan_result.json"
+    Path(filename).parent.mkdir(parents=True, exist_ok=True)
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(scan_result, f, indent=2)
+    print(f"Saving scan result to {filename}")
+
+    if USE_MONGODB:
+        print("Upserting scan data for domain:", domain)
+        mongodb_upsert_domain_scan(domain, scan_result)
+    else:
+        print("Skipping MongoDB upsert as USE_MONGODB is False.")
+    print(os.getenv("USE_MONGODB"))
+    print(os.getenv("MONGODB_URI"))
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Web Module")
+    parser = argparse.ArgumentParser(description="Webcheck CLI")
     parser.add_argument("domain", type=str, help="The target domain")
     parser.add_argument("--checks", type=str, help="Comma separated list of checks to perform", default="")
     parser.add_argument("--notls", action="store_true", help="Use TLS or not", default=False)
@@ -263,6 +292,11 @@ if __name__ == "__main__":
     parser.add_argument("--crawl-max-domains", type=int, help="Max domains to scan", default=-1)
     parser.add_argument("--crawl-interval", type=int, help="Interval between scans in sec", default=0)
     args = parser.parse_args()
+
+    last_scans = mongodb_get_last_scans_by_type("domain", limit=25)
+    print(last_scans)
+    last_scanned_domains = [entry["target"] for entry in last_scans]
+    print("Last scanned domains:", last_scanned_domains)
 
     domain = str(args.domain).strip()
     checks = str(args.checks).strip().split(",") if args.checks else None
@@ -302,6 +336,7 @@ if __name__ == "__main__":
         try:
             scan_result = scan_domain_sync(d, use_tls=use_tls, force=force, checks=checks)
             domains_scanned.add(d)
+
         except Exception as e:
             print("Error scanning domain {}: {}".format(d, str(e)))
             domains_failed.add(d)

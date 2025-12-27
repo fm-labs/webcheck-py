@@ -145,3 +145,18 @@ docker run -it --rm -v $PWD/data:/app/data --name webcheck webcheck-py webcheckc
 ```bash
 docker run -d -p 8000:8000 -v $PWD/data:/app/data --name webcheck-web webcheck-py webchecksrv
 ```
+
+
+## Docker compose
+
+A `compose.yml` file is provided for easier setup of the web server.
+
+### Run server via Docker Compose
+
+```bash
+docker compose up -d
+```
+
+A web server will be available at `http://localhost:18000`.
+
+A MongoDB instance will be available at `mongodb://localhost:18017`.

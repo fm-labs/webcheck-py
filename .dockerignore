@@ -1,0 +1,12 @@
+.idea/
+.vscode/
+.venv/
+dist/
+build/
+volumes/
+node_modules/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+*.log

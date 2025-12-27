@@ -1,6 +1,6 @@
 import * as React from 'react'
 import './App.css'
-import {fetchRecentScans, fetchWebcheckResults, postDomainScan} from "@/api.ts";
+import {fetchRecentScans, postDomainScan} from "@/api.ts";
 import WebcheckResults from "@/WebcheckResults.tsx";
 import {Card} from "@/webcheck/components/Form/Card.tsx";
 import Heading from "@/webcheck/components/Form/Heading.tsx";
@@ -51,33 +51,33 @@ function App() {
         return () => clearInterval(timer);
     }, [])
 
-    const updateHistoryWithDomain = (domain: string) => {
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.set("domain", domain);
-        window.history.pushState({"domain": domain}, '', newUrl.toString());
-    }
+    // const updateHistoryWithDomain = (domain: string) => {
+    //     const newUrl = new URL(window.location.href);
+    //     newUrl.searchParams.set("domain", domain);
+    //     window.history.pushState({"domain": domain}, '', newUrl.toString());
+    // }
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setInputText(event.target.value)
     }
 
-    const handleFetchResultsClick = (event: React.FormEvent<HTMLButtonElement>) => {
-        event.preventDefault()
-        console.log("Submitted domain:", inputText)
-        setDomain(inputText)
-        updateHistoryWithDomain(inputText)
-
-        setResultJson({scan: {status: "fetching", message: "Fetching results..."}})
-        fetchWebcheckResults(inputText)
-            .then(data => {
-                console.log("Response data:", data)
-                setResultJson(data)
-            })
-            .catch(error => {
-                console.error("Error fetching data:", error)
-                setResultJson({error: "Failed to fetch data"})
-            })
-    }
+    // const handleFetchResultsClick = (event: React.FormEvent<HTMLButtonElement>) => {
+    //     event.preventDefault()
+    //     console.log("Submitted domain:", inputText)
+    //     setDomain(inputText)
+    //     updateHistoryWithDomain(inputText)
+    //
+    //     setResultJson({scan: {status: "fetching", message: "Fetching results..."}})
+    //     fetchWebcheckResults(inputText)
+    //         .then(data => {
+    //             console.log("Response data:", data)
+    //             setResultJson(data)
+    //         })
+    //         .catch(error => {
+    //             console.error("Error fetching data:", error)
+    //             setResultJson({error: "Failed to fetch data"})
+    //         })
+    // }
 
     const handleSubmitScanClick = (event: React.FormEvent<HTMLButtonElement>) => {
         event.preventDefault()
@@ -112,9 +112,6 @@ function App() {
 
                     <button onClick={handleSubmitScanClick}>
                         Scan
-                    </button>
-                    <button onClick={handleFetchResultsClick}>
-                        Fetch
                     </button>
                 </div>
             </div>

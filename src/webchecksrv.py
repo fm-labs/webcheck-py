@@ -10,6 +10,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from scanhistory import get_last_scans_by_type
 from webcheck.conf import WEBCHECK_DATA_DIR, WEBCHECK_UI_DIR
+from webcheck.util.mongodb_helper import mongodb_get_last_scans_by_type
 from webcheckcli import scan_domain_sync
 
 @asynccontextmanager
@@ -45,7 +46,12 @@ async def get_recent_scans() -> dict:
     """
     Retrieve a list of recently scanned domains.
     """
-    last_scanned_domains = get_last_scans_by_type("domain", limit=25)
+    #last_scanned_domains = get_last_scans_by_type("domain", limit=25)
+    last_scans = mongodb_get_last_scans_by_type("domain", limit=25)
+    # {"type": "domain", "target": "example.com", "timestamp": 1620000000}
+    # extract only the target domain names
+    last_scanned_domains = [entry["target"] for entry in last_scans]
+
     return {"domains": list(last_scanned_domains)}
 
 

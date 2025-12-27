@@ -2,6 +2,7 @@
 bak/
 data/
 vendor/
+volumes/
 src/webcheck/deprecated
 src/webcheck/generated
 

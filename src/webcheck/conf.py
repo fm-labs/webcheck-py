@@ -14,6 +14,15 @@ WAPPALYZER_CLI_PATH = os.getenv("WAPPALYZER_CLI_PATH", "bin/wappalyzer")
 WEBCHECK_CACHE_ENGINE = "local"
 WEBCHECK_CACHE_TTL_SEC = 60 * 60 * 24 * 7  # 7 days
 
+WEBCHECK_QUEUE_ENGINE = os.getenv("WEBCHECK_QUEUE_ENGINE", "mongodb")  # options: "mongodb", "local"
+
+USE_MONGODB = os.getenv("USE_MONGODB", "false").lower() == "true"
+MONGODB_URI = os.getenv("MONGODB_URI", None) # "mongodb://mongodb:27017"
+MONGODB_DB_NAME = os.getenv("MONGODB_DATABASE", "webcheck")
+MONGODB_CACHE_COLLECTION = os.getenv("MONGODB_QUEUE_COLLECTION", "cache")
+MONGODB_QUEUE_COLLECTION = os.getenv("MONGODB_QUEUE_COLLECTION", "queue")
+MONGODB_DOMAINS_COLLECTION = os.getenv("MONGODB_QUEUE_COLLECTION", "domains")
+
 DNS_PROVIDERS = {
     "google": {
         "nameservers": ["8.8.8.8", "8.8.4.4"],
