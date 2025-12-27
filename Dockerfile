@@ -15,6 +15,7 @@ WORKDIR /app
 # Install dependencies
 COPY ./pyproject.toml ./uv.lock ./README.md ./
 COPY ./src ./src
+COPY ./dl_easylist.sh ./dl_ranklists.sh ./
 RUN uv sync --no-cache-dir
 
 # Build the application binary with pyinstaller
