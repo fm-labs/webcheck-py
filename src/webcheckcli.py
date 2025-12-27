@@ -232,6 +232,25 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
     return scan_result
 
 
+domains_queued: set[tuple[str,int]] = set()
+domains_scanned: set[str] = set()
+domains_failed: set[str] = set()
+
+def add_to_queue(domain, depth=0):
+    global domains_queued
+    global domains_scanned
+    if domain not in domains_scanned:
+        domains_queued.add((domain, depth))
+    else:
+        print(f"Domain {domain} already scanned, skipping adding to queue.")
+
+def get_next_from_queue(max_depth=-1):
+    global domains_queued
+    if len(domains_queued) > 0:
+        domain, depth = domains_queued.pop()
+        if max_depth < 0 or depth <= max_depth:
+            return domain, depth
+    return None, None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Web Module")
@@ -239,26 +258,106 @@ if __name__ == "__main__":
     parser.add_argument("--checks", type=str, help="Comma separated list of checks to perform", default="")
     parser.add_argument("--notls", action="store_true", help="Use TLS or not", default=False)
     parser.add_argument("--force", action="store_true", help="Force re-scan even if cached result exists", default=False)
+    parser.add_argument("--crawl", action="store_true", help="Crawl linked domains", default=False)
+    parser.add_argument("--crawl-max-depth", type=int, help="Max domain depth", default=0)
+    parser.add_argument("--crawl-max-domains", type=int, help="Max domains to scan", default=-1)
+    parser.add_argument("--crawl-interval", type=int, help="Interval between scans in sec", default=0)
     args = parser.parse_args()
 
     domain = str(args.domain).strip()
     checks = str(args.checks).strip().split(",") if args.checks else None
     use_tls = not args.notls
     force = args.force
+    crawl = args.crawl
+    crawl_max_depth = args.crawl_max_depth
+    crawl_max_domains = args.crawl_max_domains
+    crawl_interval = args.crawl_interval
 
-    domains = []
     # if domain starts with "@", it refers to a file with list of domains
     if domain.startswith("@"):
         filename = domain[1:]
         with open(filename, "r", encoding="utf-8") as f:
             domains = [line.strip() for line in f if line.strip()]
+        print(f"Initialized {len(domains)} domains")
+        for d in domains:
+            add_to_queue(d, 0)
     else:
-        domains.append(domain)
+        # split by comma
+        domains = [d.strip() for d in domain.split(",") if d.strip()]
+        for d in domains:
+            add_to_queue(d, 0)
 
-    print(f"Scanning {len(domains)} domains")
     #print("Domains: ", domains)
-    for d in domains:
+    i = 0
+    should_continue = True
+    while len(domains_queued) > 0 and should_continue:
+        # get next domain
+        d, depth = get_next_from_queue(crawl_max_depth)
+        if not d:
+            break
+
+        i += 1
+        print(f"\n[#{i}] Scanning domain: {d} (Queued: {len(domains_queued)}, Scanned: {len(domains_scanned)}, Failed: {len(domains_failed)})")
+
         try:
-            scan_domain_sync(d, use_tls=use_tls, force=force, checks=checks)
+            scan_result = scan_domain_sync(d, use_tls=use_tls, force=force, checks=checks)
+            domains_scanned.add(d)
         except Exception as e:
             print("Error scanning domain {}: {}".format(d, str(e)))
+            domains_failed.add(d)
+            continue
+
+        try:
+            if crawl and depth < crawl_max_depth and 'page' in scan_result:
+                # extract links and add to queue
+                page_info = scan_result['page']
+                domains = page_info.get('parsed', {}).get('linkDomains', [])
+                for _d in domains:
+                    print("  [+] Found linked domain: {}".format(_d))
+                    add_to_queue(_d, depth + 1)
+        except Exception as e:
+            print("Error during crawling links: {}".format(str(e)))
+            continue
+
+
+        # dump progress stats every 10 scans to console and file
+        if i % 10 == 0 or len(domains_queued) == 0:
+            stats = {
+                'queued': len(domains_queued),
+                'scanned': len(domains_scanned),
+                'failed': len(domains_failed),
+            }
+            print(f"\n[+] Scan Progress: {json.dumps(stats, indent=2)}")
+            stats_file = f"{WEBCHECK_DATA_DIR}/webcheck/scan_progress.json"
+            with open(stats_file, "w", encoding="utf-8") as f:
+                json.dump(stats, f, indent=2)
+
+        if crawl_max_domains > 0 and len(domains_scanned) >= crawl_max_domains:
+            print(f"[+] Reached max crawl domains limit of {crawl_max_domains}, stopping further scans.")
+            should_continue = False
+            break
+
+        # time interval between scans
+        if len(domains_queued) > 0 and crawl_interval > 0:
+            print(f"[+] Waiting for {crawl_interval} seconds before next scan...")
+            time.sleep(crawl_interval)
+
+    print("\n[+] Scan completed.")
+    print(f"Total Domains Scanned: {len(domains_scanned)}")
+    print(f"Total Domains Failed: {len(domains_failed)}")
+
+    # dump failed domains to file
+    if len(domains_failed) > 0:
+        failed_file = f"{WEBCHECK_DATA_DIR}/webcheck/failed_domains.txt"
+        with open(failed_file, "w", encoding="utf-8") as f:
+            for d in domains_failed:
+                f.write(d + "\n")
+        print(f"Failed domains written to {failed_file}")
+
+    # dump scanned domains to file
+    if len(domains_scanned) > 0:
+        scanned_file = f"{WEBCHECK_DATA_DIR}/webcheck/scanned_domains.txt"
+        with open(scanned_file, "w", encoding="utf-8") as f:
+            for d in domains_scanned:
+                f.write(d + "\n")
+        print(f"Scanned domains written to {scanned_file}")

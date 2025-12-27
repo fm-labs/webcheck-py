@@ -17,7 +17,7 @@ def add_scanhistory(scanner: str, target: str):
         writer.writerow([scanner, target, int(timestamp * 1000)])  # store timestamp in milliseconds
 
 
-def get_scanhistory(limit: int = 100) -> list[dict]:
+def get_scanhistory(limit: int = 1000) -> list[dict]:
     """
     Retrieve the scan history from the CSV file.
 

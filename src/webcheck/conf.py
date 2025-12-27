@@ -9,7 +9,7 @@ WEBCHECK_USER_AGENT = os.getenv("WEBCHECK_USER_AGENT", DEFAULT_WEBCHECK_USER_AGE
 DEFAULT_WEBCHECK_UI_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'ui', 'dist')
 WEBCHECK_UI_DIR = os.getenv("WEBCHECK_UI_DIR", DEFAULT_WEBCHECK_UI_DIR)
 
-WAPPALYZER_CLI_PATH = os.getenv("WAPPALYZER_CLI_PATH", "wappalyzer")
+WAPPALYZER_CLI_PATH = os.getenv("WAPPALYZER_CLI_PATH", "bin/wappalyzer")
 
 WEBCHECK_CACHE_ENGINE = "local"
 WEBCHECK_CACHE_TTL_SEC = 60 * 60 * 24 * 7  # 7 days
