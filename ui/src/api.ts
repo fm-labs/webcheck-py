@@ -1,8 +1,8 @@
-const API_BASE_URL = "http://localhost:8000/webcheck"
+import {WEBCHECK_API_BASE_URL} from "@/constants.ts";
 
 export const fetchWebcheckResults = async (domain: string) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/d/` + domain)
+        const response = await fetch(`${WEBCHECK_API_BASE_URL}/d/` + domain)
         const data = await response.json()
         console.log("Response data:", data)
         return data
@@ -14,7 +14,7 @@ export const fetchWebcheckResults = async (domain: string) => {
 
 export const fetchRecentScans = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/scans/`)
+        const response = await fetch(`${WEBCHECK_API_BASE_URL}/scans`)
         const data = await response.json()
         console.log("Response data:", data)
         return data
@@ -26,7 +26,7 @@ export const fetchRecentScans = async () => {
 
 export const postDomainScan = async (domain: string) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/d/` + domain, {
+        const response = await fetch(`${WEBCHECK_API_BASE_URL}/d/` + domain, {
             method: "POST"
         })
         const data = await response.json()
@@ -40,7 +40,7 @@ export const postDomainScan = async (domain: string) => {
 
 export const doCheck = async (checkName: string, domain: string) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/c/` + checkName + "/?domain=" + domain, {
+        const response = await fetch(`${WEBCHECK_API_BASE_URL}/c/` + checkName + "/?domain=" + domain, {
             method: "POST"
         })
         const data = await response.json()

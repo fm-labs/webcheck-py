@@ -1,0 +1,1 @@
+export const WEBCHECK_API_BASE_URL = import.meta.env.VITE_WEBCHECK_API_BASE_URL || `${window.location.protocol}://${window.location.host}/webcheck`

@@ -6,6 +6,9 @@ WEBCHECK_DATA_DIR = os.getenv("WEBCHECK_DATA_DIR", DEFAULT_WEBCHECK_DATA_DIR)
 DEFAULT_WEBCHECK_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0"
 WEBCHECK_USER_AGENT = os.getenv("WEBCHECK_USER_AGENT", DEFAULT_WEBCHECK_USER_AGENT)
 
+DEFAULT_WEBCHECK_UI_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'ui', 'dist')
+WEBCHECK_UI_DIR = os.getenv("WEBCHECK_UI_DIR", DEFAULT_WEBCHECK_UI_DIR)
+
 WAPPALYZER_CLI_PATH = os.getenv("WAPPALYZER_CLI_PATH", "wappalyzer")
 
 WEBCHECK_CACHE_ENGINE = "local"

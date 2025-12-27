@@ -1,4 +1,4 @@
-import { JSX, useEffect, useState } from "react";
+import {type JSX, useState} from "react";
 import styled from '@emotion/styled';
 import { Card } from '@/webcheck/components/Form/Card.tsx';
 import Row from '@/webcheck/components/Form/Row.tsx';

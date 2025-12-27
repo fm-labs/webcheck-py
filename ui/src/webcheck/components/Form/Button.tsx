@@ -1,4 +1,4 @@
-import { type ReactNode, type MouseEventHandler, JSX } from "react";
+import { type ReactNode, type MouseEventHandler, type JSX } from "react";
 
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';

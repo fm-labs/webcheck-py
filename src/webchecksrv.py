@@ -3,11 +3,13 @@ import inspect
 import logging
 from contextlib import asynccontextmanager, AsyncExitStack
 
+import uvicorn
 from fastapi import APIRouter, FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
 from scanhistory import get_last_scans_by_type
-from webcheck.conf import WEBCHECK_DATA_DIR
+from webcheck.conf import WEBCHECK_DATA_DIR, WEBCHECK_UI_DIR
 from webcheckcli import scan_domain_sync
 
 @asynccontextmanager
@@ -132,3 +134,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(router)
+
+# Mount the ui static files
+app.mount("/", StaticFiles(directory=WEBCHECK_UI_DIR, html=True), name="ui"),
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

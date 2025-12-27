@@ -47,6 +47,7 @@ function App() {
         const timer = setInterval(() => {
             fetchRecentScans().then((data) => setRecentDomains(data.domains || []))
         }, 30000);
+        fetchRecentScans().then((data) => setRecentDomains(data.domains || []))
         return () => clearInterval(timer);
     }, [])
 
@@ -101,7 +102,7 @@ function App() {
     return (
         <>
             <Helmet>
-                <title>{`webcheck ${domain}`}</title>
+                <title>{`${domain || "New scan"} | webcheck`}</title>
             </Helmet>
             <h1>webcheck</h1>
             <div className={"card"}>
