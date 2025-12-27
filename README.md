@@ -122,8 +122,6 @@ uv run uvicorn --app-dir . --port 8000 webchecksrv:app --reload
 ```
 
 
-
-
 ## Docker
 
 ### Build Docker Image
@@ -132,13 +130,18 @@ uv run uvicorn --app-dir . --port 8000 webchecksrv:app --reload
 docker build -t webcheck-py .
 ```
 
-### Run Docker Container
+### Run scan via Docker
 
 ```bash
 docker run -it --rm -v $PWD/data:/app/data --name webcheck webcheck-py webcheckcli --help
 ```
 
-
 ```bash
 docker run -it --rm -v $PWD/data:/app/data --name webcheck webcheck-py webcheckcli @/app/data/domains.txt
+```
+
+### Run server via Docker
+
+```bash
+docker run -d -p 8000:8000 -v $PWD/data:/app/data --name webcheck-web webcheck-py webchecksrv
 ```

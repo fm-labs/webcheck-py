@@ -87,5 +87,5 @@ ENV WEBCHECK_DATA_DIR=/app/data
 ENV WEBCHECK_UI_DIR=/app/ui
 ENV WAPPALYZER_CLI_PATH=/usr/local/bin/wappalyzer
 
-CMD ["scan", "--help"]
+CMD ["webcheckcli", "--help"]
 USER app
