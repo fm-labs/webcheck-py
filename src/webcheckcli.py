@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 from webcheck.util.cache_helper import cache_read, cache_write
 from webcheck.carbon import carbon_handler
 from webcheck.conf import WEBCHECK_DATA_DIR, WEBCHECK_CACHE_TTL_SEC
-from webcheck.util.content_helper import clear_url_cache
+from webcheck.util.content_helper import clear_url_cache, build_host_url_cache_key, reverse_domain_path
 from webcheck.util.content_helper import get_url_content
 from webcheck.dns import dns_handler
 from webcheck.firewall import firewall_handler
@@ -165,7 +165,7 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
             #     result = asyncio.run(handler_func(domain))
             # else:
             #     result = handler_func(domain)
-            result = invoke_cached(f"{domain}/{handler_name}", handler_func, ttl=cache_ttl)(domain)
+            result = invoke_cached(f"{reverse_domain_path(domain)}/{handler_name}", handler_func, ttl=cache_ttl)(domain)
             scan_result[handler_name] = result
         except Exception as e:
             scan_result[handler_name] = {'error': str(e)}
@@ -199,7 +199,7 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
             #     result = asyncio.run(handler_func(url))
             # else:
             #     result = handler_func(url)
-            result = invoke_cached(f"{domain}/{handler_name}", handler_func, ttl=cache_ttl)(url)
+            result = invoke_cached(f"{reverse_domain_path(domain)}/{handler_name}", handler_func, ttl=cache_ttl)(url)
             scan_result[handler_name] = result
         except Exception as e:
             print(f"Error in handler {handler_name}: {str(e)}")

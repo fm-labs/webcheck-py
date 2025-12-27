@@ -11,7 +11,19 @@ def fetch_url_content(url):
     return status_code, headers, content
 
 
-def build_url_cache_key(url):
+def reverse_domain_path(domain, join_char="/"):
+    """
+    Reverse the parts of a domain for cache key generation.
+
+    :param domain:
+    :return:
+    """
+    parts = domain.split(".")
+    parts.reverse()
+    return join_char.join(parts)
+
+
+def build_host_url_cache_key(url):
     """
     Build a cache key for the given URL.
     The key is structured to create a directory-like hierarchy
