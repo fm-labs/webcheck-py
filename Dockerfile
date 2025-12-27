@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 # Install astral uv
 RUN pip install --no-cache-dir --upgrade uv pip
 
-WORKDIR /app
+WORKDIR /appbuilder/
 
 # Copy the application code
 # Install dependencies
@@ -24,11 +24,11 @@ RUN ./build_bin.sh
 
 
 # UI build stage
-FROM node:24 AS uibuild-stage
-WORKDIR /app/
+FROM node:25.2-alpine3.22 AS uibuild-stage
+WORKDIR /uibuilder/
 COPY ./ui ./
 RUN npm -g install bun
-RUN bun install --frozen-lockfile
+RUN bun ci # clean install
 RUN bun run build
 
 
@@ -58,8 +58,11 @@ RUN groupadd -r app &&  \
 WORKDIR /app
 
 # copy webcheckcli binary from build-stage
-COPY --from=build-stage /app/dist/bin/webcheckcli /usr/local/bin/webcheckcli
-COPY --from=build-stage /app/dist/bin/webchecksrv /usr/local/bin/webchecksrv
+COPY --from=build-stage /appbuilder/dist/bin/webcheckcli /usr/local/bin/webcheckcli
+COPY --from=build-stage /appbuilder/dist/bin/webchecksrv /usr/local/bin/webchecksrv
+
+# copy UI build from uibuild-stage
+COPY --from=uibuild-stage /uibuilder/dist /app/ui
 
 # copy wappalyzer binary from fmlabs/wappalyzer:latest
 COPY --from=fmlabs/wappalyzer:latest /app/scan /usr/local/bin/wappalyzer
@@ -81,6 +84,7 @@ RUN mkdir -p /app && \
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 ENV WEBCHECK_DATA_DIR=/app/data
+ENV WEBCHECK_UI_DIR=/app/ui
 ENV WAPPALYZER_CLI_PATH=/usr/local/bin/wappalyzer
 
 CMD ["scan", "--help"]
