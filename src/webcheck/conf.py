@@ -1,10 +1,13 @@
 import os
 
-WEBCHECK_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data')
-WEBCHECK_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0"
+DEFAULT_WEBCHECK_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data')
+WEBCHECK_DATA_DIR = os.getenv("WEBCHECK_DATA_DIR", DEFAULT_WEBCHECK_DATA_DIR)
+
+DEFAULT_WEBCHECK_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0"
+WEBCHECK_USER_AGENT = os.getenv("WEBCHECK_USER_AGENT", DEFAULT_WEBCHECK_USER_AGENT)
 
 WEBCHECK_CACHE_ENGINE = "local"
-WEBCHECK_CACHE_TTL_SEC = 60 * 60 * 24 * 30  # 30 days
+WEBCHECK_CACHE_TTL_SEC = 60 * 60 * 24 * 7  # 7 days
 
 DNS_PROVIDERS = {
     "google": {

@@ -60,6 +60,7 @@ COPY --from=build-stage /app/dist/bin /usr/local/bin
 # Environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
+ENV WEBCHECK_DATA_DIR=/app/data
 
 CMD ["webcheckcli", "--help"]
 USER app
