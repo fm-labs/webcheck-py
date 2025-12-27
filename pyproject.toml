@@ -1,0 +1,29 @@
+[project]
+name = "webcheck"
+version = "0.1.0"
+description = "webcheck-py is a lightweight tool for checking the availability and performance of web services."
+requires-python = ">=3.13"
+dependencies = [
+    "adblockparser>=0.7",
+    "aiohttp>=3.13.2",
+    "beautifulsoup4>=4.14.3",
+    "dnspython>=2.8.0",
+    "fastapi>=0.127.0",
+    "playwright>=1.57.0",
+    "requests>=2.32.5",
+    "uvicorn>=0.40.0",
+]
+readme = "README.md"
+authors = [
+    { name = "fm-labs", email = "flowmotionlabs@gmail.com" }
+]
+
+[build-system]
+requires = ["uv_build>=0.8.15,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.15.0",
+]
+
