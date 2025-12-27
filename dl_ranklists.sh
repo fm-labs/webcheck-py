@@ -1,10 +1,12 @@
 #!/bin/bash
 
+WEBCHECK_DATA_DIR=${WEBCHECK_DATA_DIR:-"./data"}
+
 TRANCO_LIST_URL="https://tranco-list.eu/download/NN23W/1000000"
-TRANCO_OUTPUT_FILE="./data/tranco-1m.csv"
+TRANCO_OUTPUT_FILE="${WEBCHECK_DATA_DIR}/tranco-1m.csv"
 
 UMBRELLA_DL_URL="https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip"
-UMBRELLA_OUTPUT_FILE="./data/top-1m.csv"
+UMBRELLA_OUTPUT_FILE="${WEBCHECK_DATA_DIR}/top-1m.csv"
 
 echo "Downloading Tranco list from $TRANCO_LIST_URL ..."
 if [ ! -f $TRANCO_OUTPUT_FILE ]; then
@@ -14,8 +16,8 @@ fi
 
 echo "Downloading Umbrella list from $UMBRELLA_DL_URL ..."
 if [ ! -f $UMBRELLA_OUTPUT_FILE ]; then
-  curl -L -o "./data/top-1m.csv.zip" "$UMBRELLA_DL_URL"
-  unzip -o "./data/top-1m.csv.zip" -d "./data/"
+  curl -L -o "${WEBCHECK_DATA_DIR}/top-1m.csv.zip" "$UMBRELLA_DL_URL"
+  unzip -o "${WEBCHECK_DATA_DIR}/top-1m.csv.zip" -d ".${WEBCHECK_DATA_DIR}/"
 
   if [[ ! -f $UMBRELLA_OUTPUT_FILE ]]; then
     echo "Error: Failed to extract Umbrella list to $UMBRELLA_OUTPUT_FILE"

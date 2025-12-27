@@ -1,11 +1,14 @@
 import subprocess
 import json
 
+from webcheck.conf import WAPPALYZER_CLI_PATH
+
+
 def run_wappalyzer(url):
 
     try:
         result = subprocess.run(
-            ['./bin/wappalyzer', url, '--quiet', '--json'],
+            [WAPPALYZER_CLI_PATH, url, '--quiet', '--json'],
             capture_output=True,
             text=True,
             check=True
