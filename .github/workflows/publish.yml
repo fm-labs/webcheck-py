@@ -55,7 +55,7 @@ jobs:
             --progress=plain \
             --sbom=true \
             --provenance=true \
-            --platform linux/amd64, linux/arm64 \
+            --platform linux/amd64,linux/arm64 \
             -f ./Dockerfile-playwright \
             --push \
             .
