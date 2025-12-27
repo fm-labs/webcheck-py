@@ -6,8 +6,7 @@ There are 3 different types of checks available:
 
 - **Domain checks**: Perform checks related to domain configuration, such as DNS records, SSL certificates, and domain reputation.
 - **Host checks**: Perform checks on specific hosts or IP addresses, including open ports, services, and vulnerabilities.
-- **Web checks**: Perform checks on web applications, including security headers
-- and content analysis.
+- **Web checks**: Perform checks on web applications, including security headers and content analysis.
 
 ## Checks
 
@@ -83,15 +82,14 @@ The following checks are available in Webcheck:
   - [x] HTML Content Analysis
     - [x] Techstack
       - [x] Wappalyzer Integration (projectdiscovery/wappalyzergo)
-      - [ ] JavaScript Libraries Detection
+      - [ ] Custom Wappalyzer Rules
     - [x] Privacy Analysis
-      - [ ] Cookie Analysis
       - [x] Advertisements (EasyList)
       - [x] Tracking Scripts (EasyPrivacy List)
       - [x] Cookie Banners (EasyList Cookie List/Fanboy's Cookiemonster List)
-    - [ ] Keyword Analysis
+    - [x] Headings
     - [x] Document Meta Tags
-    - [x] Links
+    - [x] Links (Internal/External)
     - [x] Audio Resources
     - [x] Video Resources
     - [x] Images
