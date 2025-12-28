@@ -1,6 +1,6 @@
 [project]
 name = "webcheck"
-version = "0.1.0"
+version = "0.2.0"
 description = "webcheck-py is a lightweight tool for checking the availability and performance of web services."
 requires-python = ">=3.13"
 dependencies = [
