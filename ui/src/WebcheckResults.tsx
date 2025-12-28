@@ -28,7 +28,13 @@ import RankCard from "@/webcheck/components/Results/Rank.tsx";
 import SslQualysCard from "@/webcheck/components/Results/SslQualys.tsx";
 
 
-const WebcheckItem = ({ domain, name, label, component: Component, data }: { domain: string, name: string; label: string; component: React.ComponentType<any>; data?: any }) => {
+const WebcheckItem = ({domain, name, label, component: Component, data}: {
+    domain: string,
+    name: string;
+    label: string;
+    component: React.ComponentType<any>;
+    data?: any
+}) => {
 
     const [componentData, setComponentData] = React.useState<any>(data || null);
 
@@ -60,28 +66,28 @@ const WebcheckItem = ({ domain, name, label, component: Component, data }: { dom
     );
 }
 
-const WebcheckResults = ({ domain, results }: { domain: string, results: any }) => {
+const WebcheckResults = ({domain, results}: { domain: string, results: any }) => {
 
     const CHECKS = [
-        { name: 'status', label: 'Status', component: ServerStatusCard },
-        { name: 'server_location', label: 'Server Location', component: ServerLocationCard },
-        { name: 'content', label: 'Headers', component: HeadersCard },
-        { name: 'http_security', label: 'HTTP Security', component: HttpSecurityCard },
-        { name: 'ssl', label: 'SSL Cert', component: SslCertCard },
-        { name: 'hsts', label: 'HSTS', component: HstsCard },
-        { name: 'whois', label: 'WHOIS', component: DomainLookupCard },
-        { name: 'dns', label: 'DNS', component: DnsRecordsCard },
-        { name: 'mx', label: 'Mail Config', component: MailConfigCard },
-        { name: 'firewall', label: 'Firewall', component: FirewallCard },
-        { name: 'robotstxt', label: 'Robots TXT', component: RobotsTxtCard },
-        { name: 'securitytxt', label: 'Security TXT', component: SecurityTxtCard },
-        { name: 'screenshot', label: 'Screenshot', component: ScreenshotCard },
-        { name: 'sitemap', label: 'Sitemap', component: SitemapCard },
-        { name: 'redirects', label: 'Redirects', component: RedirectsCard },
-        { name: 'social_tags', label: 'Social Tags', component: SocialTagsCard },
-        { name: 'wappalyzer', label: 'Tech Stack', component: TechStackCard },
-        { name: 'page', label: 'Resources', component: PageResourcesCard },
-        { name: 'carbon', label: 'Carbon Footprint', component: CarbonCard },
+        {name: 'status', label: 'Status', component: ServerStatusCard},
+        {name: 'server_location', label: 'Server Location', component: ServerLocationCard},
+        {name: 'content', label: 'Headers', component: HeadersCard},
+        {name: 'http_security', label: 'HTTP Security', component: HttpSecurityCard},
+        {name: 'ssl', label: 'SSL Cert', component: SslCertCard},
+        {name: 'hsts', label: 'HSTS', component: HstsCard},
+        {name: 'whois', label: 'WHOIS', component: DomainLookupCard},
+        {name: 'dns', label: 'DNS', component: DnsRecordsCard},
+        {name: 'mx', label: 'Mail Config', component: MailConfigCard},
+        {name: 'firewall', label: 'Firewall', component: FirewallCard},
+        {name: 'robotstxt', label: 'Robots TXT', component: RobotsTxtCard},
+        {name: 'securitytxt', label: 'Security TXT', component: SecurityTxtCard},
+        {name: 'screenshot', label: 'Screenshot', component: ScreenshotCard},
+        {name: 'sitemap', label: 'Sitemap', component: SitemapCard},
+        {name: 'redirects', label: 'Redirects', component: RedirectsCard},
+        {name: 'social_tags', label: 'Social Tags', component: SocialTagsCard},
+        {name: 'wappalyzer', label: 'Tech Stack', component: TechStackCard},
+        {name: 'page', label: 'Resources', component: PageResourcesCard},
+        {name: 'carbon', label: 'Carbon Footprint', component: CarbonCard},
         //{ name: 'ssl_qualys', label: 'Qualys SSL Check', component: SslQualysCard },
         //{ name: 'umbrella_rank', label: 'Umbrella Rank', component: RankCard },
         //{ name: 'tranco_rank', label: 'Tranco Rank', component: RankCard },
@@ -90,8 +96,8 @@ const WebcheckResults = ({ domain, results }: { domain: string, results: any }) 
     if (results?.error) {
         return (
             <div>
-                <h2>{domain}</h2>
-                <p style={{ color: 'red' }}>Error: {results.error}</p>
+                <h2><a href={'https://' + domain}>{domain}</a></h2>
+                <p style={{color: 'red'}}>Error: {results.error}</p>
             </div>
         );
     }
@@ -107,7 +113,7 @@ const WebcheckResults = ({ domain, results }: { domain: string, results: any }) 
 
     return (
         <div>
-            <h2>{domain}</h2>
+            <h2><a target={"_blank"} rel={"noreferrer"} href={'https://' + domain}>{domain}</a></h2>
             <Columns>
                 {CHECKS.map((check) => {
                     return (
@@ -128,9 +134,9 @@ const WebcheckResults = ({ domain, results }: { domain: string, results: any }) 
                           name={"content"}
                           label={"Content"}
                           component={PageParsedCard}
-                          data={results['page'] || {}} />
+                          data={results['page'] || {}}/>
 
-            <DomainNetwork data={results['page'] || {}} />
+            <DomainNetwork data={results['page'] || {}}/>
         </div>
     );
 };

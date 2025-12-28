@@ -2,25 +2,23 @@ import argparse
 import asyncio
 import inspect
 import json
-import os
-import socket
 import time
 from pathlib import Path
-from urllib.parse import urlparse
 
-from webcheck.util.cache_helper import cache_read, cache_write
+from scanhistory import add_scanhistory
 from webcheck.carbon import carbon_handler
 from webcheck.conf import WEBCHECK_DATA_DIR, WEBCHECK_CACHE_TTL_SEC, USE_MONGODB
-from webcheck.util.content_helper import clear_url_cache, build_host_url_cache_key, reverse_domain_path
-from webcheck.util.content_helper import get_url_content
+from webcheck.content import webcontent_handler
 from webcheck.dns import dns_records_handler
 from webcheck.firewall import firewall_handler
 from webcheck.hsts import hsts_handler
 from webcheck.http_headers import http_headers_handler
 from webcheck.http_security import http_security_handler
+from webcheck.ip import hostip_handler
 from webcheck.mail_config import mail_config_handler
 from webcheck.page import page_handler
 from webcheck.ping import ping_handler
+from webcheck.rank import rank_handler
 from webcheck.redirects import redirects_handler
 from webcheck.robotstxt import robots_handler
 from webcheck.screenshot import screenshot_handler
@@ -30,54 +28,12 @@ from webcheck.sitemap import sitemap_handler
 from webcheck.social_tags import social_tags_handler
 from webcheck.ssl import ssl_handler
 from webcheck.status import status_handler
-from webcheck.rank import rank_handler
+from webcheck.util.cache_helper import cache_read, cache_write
+from webcheck.util.content_helper import clear_url_cache, reverse_domain_path
+from webcheck.util.mongodb_helper import mongodb_upsert_domain_scan
 from webcheck.util.mongodb_queue import JobQueue, SimpleInMemoryQueue
 from webcheck.wappalyzer import wappalyzer_handler
 from webcheck.whois import whois_handler
-from scanhistory import add_scanhistory
-from webcheck.util.mongodb_helper import mongodb_upsert_domain_scan, mongodb_get_last_scans_by_type
-
-
-def get_ip_address(domain):
-    try:
-        ip_address = socket.gethostbyname(domain)
-        return ip_address
-    except socket.gaierror:
-        return None
-
-
-def webcontent_handler(url):
-    try:
-        status_code, headers, content = get_url_content(url)
-        parsed_url = urlparse(url)
-        hostname = parsed_url.hostname
-
-        filename = f"{WEBCHECK_DATA_DIR}/webcheck/{hostname}/content.txt"
-        Path(filename).parent.mkdir(parents=True, exist_ok=True)
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        status_code, headers, content = get_url_content(url)
-        return {
-            'url': url,
-            'status_code': status_code,
-            'headers': headers,
-            'content_length': len(content),
-            'file': filename,
-        }
-    except Exception as e:
-        raise Exception(f"Error fetching URL content: {str(e)}")
-
-
-def hostip_handler(url):
-    domain = url.split("//")[-1].split("/")[0]
-    ip_address = get_ip_address(domain)
-    if not ip_address:
-        raise Exception(f"Unable to resolve domain: {domain}")
-    return {
-        'domain': domain,
-        'ip_address': ip_address
-    }
 
 
 def invoke_cached(cache_key, handler_func, ttl=60):
@@ -104,6 +60,43 @@ def invoke_cached(cache_key, handler_func, ttl=60):
     return wrapper
 
 
+# Host based handlers
+HOST_HANDLERS = {
+    'ip': (hostip_handler, 60 * 24),
+    #'ports': (check_host_ports, None),
+    'ping': (ping_handler, None),
+    'dns': (dns_records_handler, None),
+    'server_location': (server_location_handler, None),
+    #'traceroute': (trace_route_handler, None),
+    'whois': (whois_handler, None),
+    'mx': (mail_config_handler, None),
+    'rank': (rank_handler, None),
+    # 'ssl_qualys': (qualys_sslchecker_handler, None), # long running, handled separately
+}
+
+URL_HANDLERS = {
+    'status': (status_handler, 60 * 24),  # cache for 24 hours
+    'content': (webcontent_handler, None),
+    'http_headers': (http_headers_handler, None),
+    'http_security': (http_security_handler, None),
+    'ssl': (ssl_handler, None),
+    'hsts': (hsts_handler, None),
+    'firewall': (firewall_handler, None),
+    'redirects': (redirects_handler, None),
+    'robotstxt': (robots_handler, None),
+    'securitytxt': (security_txt_handler, None),
+    'sitemap': (sitemap_handler, None),
+    'social_tags': (social_tags_handler, None),
+    'page': (page_handler, None),
+    'screenshot': (screenshot_handler, None),
+    'wappalyzer': (wappalyzer_handler, None),
+    'carbon': (carbon_handler, None),
+}
+
+def should_scan_domain(domain: str):
+    # implement any logic to decide whether to scan the domain
+    return True
+
 def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
     if '://' in domain:
         domain = domain.split("://", 1)[1].split("/")[0]
@@ -115,101 +108,52 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
         'url': url,
     }
 
-    cache_ttl = 0 if force else WEBCHECK_CACHE_TTL_SEC
     scan_started_at = time.time() * 1000
-
-    # # move old files to new structure
-    # old_content_file = f"{WEBCHECK_DATA_DIR}/webcheck/scan_{domain}_content.txt"
-    # new_content_file = f"{WEBCHECK_DATA_DIR}/webcheck/{domain}/content.txt"
-    # if Path(old_content_file).exists() and not Path(new_content_file).exists():
-    #     Path(new_content_file).parent.mkdir(parents=True, exist_ok=True)
-    #     Path(old_content_file).rename(new_content_file)
-    #
-    # old_result_file = f"{WEBCHECK_DATA_DIR}/webcheck/scan_{domain}.json"
-    # new_result_file = f"{WEBCHECK_DATA_DIR}/webcheck/{domain}/scan_result.json"
-    # if Path(old_result_file).exists() and not Path(new_result_file).exists():
-    #     Path(new_result_file).parent.mkdir(parents=True, exist_ok=True)
-    #     Path(old_result_file).rename(new_result_file)
 
     # skip if already scanned
     # if Path(new_result_file).exists() and not force:
     #    print(f"[+] Scan result for {domain} already exists, skipping...")
     #    return
 
-    # first get IP address
-    #ip_address = get_ip_address(domain)
-    #scan_result['ip_address'] = ip_address
-    #if not ip_address:
-    #    scan_result['error'] = f"Unable to resolve domain: {domain}"
-    #    print(scan_result)
-    #    exit(1)
-
-    # todo
-    # probe the host and index page to
-    # pre-fetch and cache the host url content
-
     # Host based handlers
-    host_handlers = {
-        'ip': hostip_handler,
-        #'ports': check_host_ports,
-        'ping': ping_handler,
-        'dns': dns_records_handler,
-        'server_location': server_location_handler,
-        #'traceroute': trace_route_handler,
-        'whois': whois_handler,
-        'mx': mail_config_handler,
-        'rank': rank_handler,
-        # 'ssl_qualys': qualys_sslchecker_handler, # long running, handled separately
-    }
-    for handler_name, handler_func in host_handlers.items():
+    for handler_name, handler in HOST_HANDLERS.items():
         if checks and handler_name not in checks:
             #print(f"Skipping {handler_name} as it's not in the checks list")
             continue
-        print(f"Handling {handler_name}")
         try:
-            # if asyncio.iscoroutinefunction(handler_func):
-            #     result = asyncio.run(handler_func(domain))
-            # else:
-            #     result = handler_func(domain)
-            result = invoke_cached(f"{reverse_domain_path(domain)}/{handler_name}", handler_func, ttl=cache_ttl)(domain)
+            handler_func = handler[0]
+            handler_ttl = handler[1] if handler[1] else WEBCHECK_CACHE_TTL_SEC
+            handler_ttl = 0 if force else handler_ttl
+            print(f"[host-check] {handler_name} ({handler_ttl})")
+            result = invoke_cached(f"{reverse_domain_path(domain)}/{handler_name}", handler_func, ttl=handler_ttl)(domain)
             scan_result[handler_name] = result
         except Exception as e:
             scan_result[handler_name] = {'error': str(e)}
 
     # URL based handlers
-    url_handlers = {
-        'status': status_handler,
-        'content': webcontent_handler,
-        'http_headers': http_headers_handler,
-        'http_security': http_security_handler,
-        'ssl': ssl_handler,
-        'hsts': hsts_handler,
-        'firewall': firewall_handler,
-        'redirects': redirects_handler,
-        'robotstxt': robots_handler,
-        'securitytxt': security_txt_handler,
-        'sitemap': sitemap_handler,
-        'social_tags': social_tags_handler,
-        'page': page_handler,
-        'screenshot': screenshot_handler,
-        'wappalyzer': wappalyzer_handler,
-        'carbon': carbon_handler,
-    }
-    for handler_name, handler_func in url_handlers.items():
+    for handler_name, handler in URL_HANDLERS.items():
         if checks and handler_name not in checks:
             #print(f"Skipping {handler_name} as it's not in the checks list")
             continue
-        print(f"Handling {handler_name}")
         try:
-            # if asyncio.iscoroutinefunction(handler_func):
-            #     result = asyncio.run(handler_func(url))
-            # else:
-            #     result = handler_func(url)
-            result = invoke_cached(f"{reverse_domain_path(domain)}/{handler_name}", handler_func, ttl=cache_ttl)(url)
+            handler_func = handler[0]
+            handler_ttl = handler[1] if handler[1] else WEBCHECK_CACHE_TTL_SEC
+            handler_ttl = 0 if force else handler_ttl
+            print(f"[page-check] {handler_name} ({handler_ttl})")
+            result = invoke_cached(f"{reverse_domain_path(domain)}/{handler_name}", handler_func, ttl=handler_ttl)(url)
             scan_result[handler_name] = result
+
+            if handler_name == 'status' and 'error' in result:
+                print("[!!] Status check failed, skipping further URL-based checks: ", result['error'])
+                break
+
         except Exception as e:
             print(f"Error in handler {handler_name}: {str(e)}")
             scan_result[handler_name] = {'error': str(e)}
+
+            if handler_name == 'status':
+                print("[!!] Status check failed, skipping further URL-based checks.", str(e))
+                break
 
 
     scan_ended_at = time.time() * 1000
@@ -277,8 +221,6 @@ def save_scan_result(domain, scan_result):
         mongodb_upsert_domain_scan(domain, scan_result)
     else:
         print("Skipping MongoDB upsert as USE_MONGODB is False.")
-    print(os.getenv("USE_MONGODB"))
-    print(os.getenv("MONGODB_URI"))
 
 
 if __name__ == "__main__":
@@ -293,10 +235,10 @@ if __name__ == "__main__":
     parser.add_argument("--crawl-interval", type=int, help="Interval between scans in sec", default=0)
     args = parser.parse_args()
 
-    last_scans = mongodb_get_last_scans_by_type("domain", limit=25)
-    print(last_scans)
-    last_scanned_domains = [entry["target"] for entry in last_scans]
-    print("Last scanned domains:", last_scanned_domains)
+    #last_scans = mongodb_get_last_scans_by_type("domain", limit=25)
+    #print(last_scans)
+    #last_scanned_domains = [entry["target"] for entry in last_scans]
+    #print("Last scanned domains:", last_scanned_domains)
 
     domain = str(args.domain).strip()
     checks = str(args.checks).strip().split(",") if args.checks else None

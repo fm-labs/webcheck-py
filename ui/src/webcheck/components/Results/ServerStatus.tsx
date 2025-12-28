@@ -27,6 +27,7 @@ const ServerStatusCard = (props: { data: any, title: string, actionButtons: any 
             </Row>
             <Row lbl="Status Code" val={serverStatus.responseCode}/>
             {serverStatus.responseTime && <Row lbl="Response Time" val={`${Math.round(serverStatus.responseTime)}ms`}/>}
+            {serverStatus?.error && <Row lbl="Error" val={serverStatus.error}/>}
         </Card>
     );
 }

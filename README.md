@@ -98,6 +98,9 @@ The following checks are available in Webcheck:
     - [ ] Vcards
     - [ ] Forms
     - [ ] Documents/PDFs/XLSX/DOCX
+    - [ ] Social Media Links
+    - [ ] Iframes
+    - [ ] Addresses / Locations / Maps
   - [x] Linked Domains
     - [x] Linked content domains
     - [x] Linked resource domains

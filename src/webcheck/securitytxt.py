@@ -49,7 +49,9 @@ def security_txt_handler(url):
         try:
             #result = fetch_security_txt(base_url, path)
             status_code, headers, content = get_url_content(f"{base_url}{path}")
-            if content and '<html' in content:
+            if not headers.get('content-type', '').lower().startswith('text/plain'):
+                return {'isPresent': False}
+            if content and ('<html' in content or '<body' in content or '<meta' in content):
                 return {'isPresent': False}
             if content:
                 return {
