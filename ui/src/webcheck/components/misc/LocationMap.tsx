@@ -5,7 +5,7 @@ import {
   Annotation,
 } from 'react-simple-maps';
 
-import MapFeatures from '@/webcheck/assets/data/map-features.json';
+import MapFeatures from '@/webcheck/assets/map-features.json';
 import colors from "@/webcheck/styles/colors.ts";
 
 interface Props {
