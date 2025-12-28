@@ -128,7 +128,7 @@ async def page_handler(url: str):
             print(f"[*] Adblock list hit: {req['url']}")
             adblock_detections.append(req["url"])
         if privacy_rules.should_block(req["url"]):
-            print(f"[*] Privacy list hist: {req['url']}")
+            print(f"[*] Privacy list hit: {req['url']}")
             privacy_detections.append(req["url"])
         if cookiemonster_rules.should_block(req["url"]):
             print(f"[*] Cookiemonster list hit: {req['url']}")
