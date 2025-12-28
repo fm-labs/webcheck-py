@@ -18,7 +18,8 @@ const ServerStatusCard = (props: { data: any, title: string, actionButtons: any 
 
     return (
         <Card heading={props.title.toString()} actionButtons={props.actionButtons} styles={cardStyles}>
-            <Row lbl="URL" val={serverStatus.url}/>
+            <Row lbl="URL" val={serverStatus.url}
+                 element={<a href={serverStatus.url} target={"_blank"}>{serverStatus.url}</a> } />
             <Row lbl="" val="">
                 <span className="lbl">Is Up?</span>
                 {serverStatus.isUp ? <span className="val up">✅ Online</span> :

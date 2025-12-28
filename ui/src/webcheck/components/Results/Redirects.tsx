@@ -40,7 +40,7 @@ const RedirectsCard = (props: { data: any, title: string, actionButtons: any }):
       {redirects.redirects.map((redirect: any, index: number) => {
         return (
           <Row lbl="" val="" key={index}>
-          <span className="arrow-thing">↳</span> {redirect}
+          <span className="arrow-thing">↳</span> <a href={redirect} target={"_blank"}>{redirect}</a>
           </Row>
         );
       })}
