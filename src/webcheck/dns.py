@@ -47,12 +47,34 @@ def get_all_dns_records(domain: str,
                 dns.resolver.LifetimeTimeout,
                 DNSException):
             # Just skip this type if there's an issue
+            print(f"DNS lookup for {rtype} record on {domain} failed or returned no answer.")
             continue
 
     return results
 
-async def dns_handler(domain: str) -> Dict[str, Any]:
-    return get_all_dns_records(domain)
+async def dns_records_handler(domain: str) -> Dict[str, Any]:
+    records = get_all_dns_records(domain)
+
+    # parse txt records into key-value pairs if present
+    readable_txt_records = {}
+    if 'TXT' in records:
+        for record_array in records['TXT']:
+            record_strings = [record_array] if isinstance(record_array, str) else record_array
+            for record_string in record_strings:
+                record_string = record_string.strip('"')
+                split_record = record_string.split('=', 1)
+                if len(split_record) >= 2:
+                    key = split_record[0]
+                    value = '='.join(split_record[1:]) if len(split_record) > 1 else ''
+                    readable_txt_records[key] = value
+                else:
+                    readable_txt_records[record_string] = ''
+
+    return {
+        'records': records,
+        'txt_records': readable_txt_records
+    }
+
 
 async def dns_handler1(domain: str) -> Dict[str, Any]:
     hostname = domain
@@ -121,4 +143,4 @@ async def dns_handler1(domain: str) -> Dict[str, Any]:
     except Exception as error:
         raise Exception(str(error))
 
-handler = dns_handler
+handler = dns_records_handler

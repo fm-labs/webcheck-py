@@ -1,6 +1,17 @@
 from urllib.parse import urlparse
 import dns.resolver
 
+KNOWN_MX_RECORDS = {
+    'yahoodns.net': 'Yahoo',
+    'mimecast.com': 'Mimecast',
+    'outlook.com': 'Outlook',
+    'google.com': 'Gmail',
+    'protonmail.com': 'ProtonMail',
+    'zoho.com': 'Zoho',
+    'titan.email': 'Titan',
+    'bluehost.com': 'BlueHost',
+}
+
 async def mail_config_handler(domain):
     try:
         if '://' in domain:
@@ -21,33 +32,31 @@ async def mail_config_handler(domain):
         
         # Get TXT records
         try:
-            txt_records = []
-            txt_result = dns.resolver.resolve(domain, 'TXT')
-            for txt in txt_result:
-                print("TXT Record:", txt)
-                txt_records.append([str(txt)])
+            answer = dns.resolver.resolve(domain, 'TXT')
+            txt_records = [r.to_text().strip('"') for r in answer]
+            #print("TXT Records found:", txt_records)
         except:
             txt_records = []
         
         # Filter for only email related TXT records
         email_txt_records = []
-        for record in txt_records:
-            record_string = ''.join(record)
+        for record_string in txt_records:
             if (record_string.startswith('v=spf1') or
                 record_string.startswith('v=DKIM1') or
                 record_string.startswith('v=DMARC1') or
+                record_string.startswith('MS=') or
                 record_string.startswith('protonmail-verification=') or
                 record_string.startswith('google-site-verification=') or
-                record_string.startswith('MS=') or
                 record_string.startswith('zoho-verification=') or
                 record_string.startswith('titan-verification=') or
+                '-verification=' in record_string or
                 'bluehost.com' in record_string):
-                email_txt_records.append(record)
+                email_txt_records.append(record_string)
         
         # Identify specific mail services
         mail_services = []
-        for record in email_txt_records:
-            record_string = ''.join(record)
+        verification_records = []
+        for record_string in email_txt_records:
             if record_string.startswith('protonmail-verification='):
                 mail_services.append({'provider': 'ProtonMail', 'value': record_string.split('=')[1]})
             elif record_string.startswith('google-site-verification='):
@@ -60,16 +69,18 @@ async def mail_config_handler(domain):
                 mail_services.append({'provider': 'Titan', 'value': record_string.split('=')[1]})
             elif 'bluehost.com' in record_string:
                 mail_services.append({'provider': 'BlueHost', 'value': record_string})
-        
-        # Check MX records for Yahoo
-        yahoo_mx = [record for record in mx_records if 'yahoodns.net' in record['exchange']]
-        if yahoo_mx:
-            mail_services.append({'provider': 'Yahoo', 'value': yahoo_mx[0]['exchange']})
-        
-        # Check MX records for Mimecast
-        mimecast_mx = [record for record in mx_records if 'mimecast.com' in record['exchange']]
-        if mimecast_mx:
-            mail_services.append({'provider': 'Mimecast', 'value': mimecast_mx[0]['exchange']})
+            elif record_string.startswith('apple-domain-verification='):
+                verification_records.append({'provider': 'Apple iCloud Mail', 'value': record_string.split('=')[1]})
+            elif record_string.startswith('dropbox-domain-verification='):
+                verification_records.append({'provider': 'Dropbox', 'value': record_string.split('=')[1]})
+            elif record_string.startswith('openai-domain-verification='):
+                verification_records.append({'provider': 'OpenAI', 'value': record_string.split('=')[1]})
+
+        # Check known MX services
+        for known_mx, provider_name in KNOWN_MX_RECORDS.items():
+            known_mx_matches = [record for record in mx_records if known_mx in record['exchange']]
+            if known_mx_matches:
+                mail_services.append({'provider': provider_name, 'value': known_mx_matches[0]['exchange']})
         
         return {
             'mxRecords': mx_records,

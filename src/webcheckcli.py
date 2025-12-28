@@ -13,7 +13,7 @@ from webcheck.carbon import carbon_handler
 from webcheck.conf import WEBCHECK_DATA_DIR, WEBCHECK_CACHE_TTL_SEC, USE_MONGODB
 from webcheck.util.content_helper import clear_url_cache, build_host_url_cache_key, reverse_domain_path
 from webcheck.util.content_helper import get_url_content
-from webcheck.dns import dns_handler
+from webcheck.dns import dns_records_handler
 from webcheck.firewall import firewall_handler
 from webcheck.hsts import hsts_handler
 from webcheck.http_headers import http_headers_handler
@@ -153,7 +153,7 @@ def scan_domain_sync(domain, use_tls=True, force=False, checks=None):
         'ip': hostip_handler,
         #'ports': check_host_ports,
         'ping': ping_handler,
-        'dns': dns_handler,
+        'dns': dns_records_handler,
         'server_location': server_location_handler,
         #'traceroute': trace_route_handler,
         'whois': whois_handler,
