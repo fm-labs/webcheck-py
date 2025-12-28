@@ -12,6 +12,45 @@ There are 3 different types of checks available:
 
 The following checks are available in Webcheck:
 
+- Mode: Active (A), Passive (P), or Both (A/P)
+
+| Category | Name                            | Mode    | Status |
+|----------|---------------------------------|---------|--------|
+| HOST     | Ping                            | Active  | ✅      |
+| HOST     | Open Ports                      | Active  |        |
+| HOST     | Reverse DNS                     | Active  |        |
+| HOST     | Geolocation                     | Active  |        |
+| HOST     | Host Services (e.g., HTTP, FTP) | Active  |        |
+| HOST     | Host Vuln Scan                  | Active  |        |
+| HOST     | ~~Traceroute~~                  | Active  |        |
+| DOMAIN   | IP Address (IPv4/IPv6)          | Active  | ✅      |
+| DOMAIN   | DNS Records                     | Active  | ✅      |
+| DOMAIN   | INTERNIC Information            | Passive | ✅      |
+| DOMAIN   | WHOIS Information               | Passive |        |
+| DOMAIN   | DNSSEC                          | Active  |        |
+| DOMAIN   | Subdomains                      | Passive |        |
+| DOMAIN   | Domain Reputation               | Passive |        |
+| DOMAIN   | Domain Blocklist                | Passive |        |
+| DOMAIN   | Qualys SSL Check                | Active  |        |
+| WEB      | HTTP Headers                    | Active  | ✅      |
+| WEB      | SSL Certificate                 | Active  | ✅      |
+| WEB      | Google Website Speed Test       | Active  |        |
+| WEB      | Website Ranking                 | Passive | ✅      |
+| WEB      | Screenshot                      | Active  | ✅      |
+| WEB      | Threats Intelligence            | Passive |        |
+| WEB      | Website Carbon Emissions        | Passive |        |
+| CONTENT  | Redirects                       | Active  | ✅      |
+| CONTENT  | Resource Requests               | Active  | ✅      |
+| CONTENT  | Response Times                  | Active  | ✅      |
+| CONTENT  | HTML Meta Tags                  | Active  | ✅      |
+| CONTENT  | HTML Content Analysis           | Active  | ✅      |
+| CONTENT  | Linked Domains                  | Active  | ✅      |
+| CONTENT  | Robots.txt                      | Active  | ✅      |
+| CONTENT  | Security.txt                    | Active  | ✅      |
+| CONTENT  | Sitemaps                        | Active  | ✅      |
+
+
+## Features
 
 - **Hosts**:
   - [x] Ping

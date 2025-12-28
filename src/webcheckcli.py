@@ -62,35 +62,35 @@ def invoke_cached(cache_key, handler_func, ttl=60):
 
 # Host based handlers
 HOST_HANDLERS = {
-    'ip': (hostip_handler, 60 * 24),
+    'ip': (hostip_handler, 60 * 24), # local DNS usage
     #'ports': (check_host_ports, None),
-    'ping': (ping_handler, None),
-    'dns': (dns_records_handler, None),
-    'server_location': (server_location_handler, None),
+    'ping': (ping_handler, None), # performs request
+    'dns': (dns_records_handler, None), # performs external requests
+    'server_location': (server_location_handler, None), # performs external requests
     #'traceroute': (trace_route_handler, None),
-    'whois': (whois_handler, None),
-    'mx': (mail_config_handler, None),
-    'rank': (rank_handler, None),
-    # 'ssl_qualys': (qualys_sslchecker_handler, None), # long running, handled separately
+    'whois': (whois_handler, None), # performs external requests
+    'mx': (mail_config_handler, None), # performs external requests
+    'rank': (rank_handler, None), # performs external requests
+    # 'ssl_qualys': (qualys_sslchecker_handler, None), # long running, handled separately, performs external requests
 }
 
 URL_HANDLERS = {
-    'status': (status_handler, 60 * 24),  # cache for 24 hours
-    'content': (webcontent_handler, None),
-    'http_headers': (http_headers_handler, None),
-    'http_security': (http_security_handler, None),
-    'ssl': (ssl_handler, None),
-    'hsts': (hsts_handler, None),
-    'firewall': (firewall_handler, None),
-    'redirects': (redirects_handler, None),
-    'robotstxt': (robots_handler, None),
-    'securitytxt': (security_txt_handler, None),
-    'sitemap': (sitemap_handler, None),
-    'social_tags': (social_tags_handler, None),
-    'page': (page_handler, None),
-    'screenshot': (screenshot_handler, None),
-    'wappalyzer': (wappalyzer_handler, None),
-    'carbon': (carbon_handler, None),
+    'status': (status_handler, 60 * 24), # performs request, no content cache  # cache for 24 hours
+    'content': (webcontent_handler, None), # writes (cached) content to file, so partial cache
+    'http_headers': (http_headers_handler, None), # uses content cache
+    'http_security': (http_security_handler, None), # uses content cache
+    'ssl': (ssl_handler, None), # performs request, no content cache
+    'hsts': (hsts_handler, None), # uses content cache
+    'firewall': (firewall_handler, None), # uses content cache
+    'redirects': (redirects_handler, None), # performs multiple requests, no content cache
+    'robotstxt': (robots_handler, None), # performs multiple requests, no content cache
+    'securitytxt': (security_txt_handler, None), # performs multiple requests, no content cache
+    'sitemap': (sitemap_handler, None), # performs multiple requests, no content cache
+    'social_tags': (social_tags_handler, None), # uses content cache
+    'page': (page_handler, None), # performs request, no content cache
+    'screenshot': (screenshot_handler, None), # performs request, no content cache
+    'wappalyzer': (wappalyzer_handler, None), # performs request, no content cache
+    'carbon': (carbon_handler, None), # performs external request
 }
 
 def should_scan_domain(domain: str):

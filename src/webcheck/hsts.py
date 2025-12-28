@@ -18,9 +18,6 @@ def hsts_handler(url):
     
     try:
         url = url if url.startswith('http') else f'https://{url}'
-        #req = urllib.request.Request(url)
-        #with urllib.request.urlopen(req) as response:
-            #headers = response.headers
         status_code, headers, content = get_url_content(url)
         #print(headers)
         hsts_header = headers.get('strict-transport-security')
@@ -40,9 +37,7 @@ def hsts_handler(url):
                 return hsts_incompatible("HSTS header does not contain the preload directive.", False, hsts_header)
             else:
                 return hsts_incompatible("Site is compatible with the HSTS preload list!", True, hsts_header)
-                    
-    except urllib.error.URLError as error:
-        return error_response(f"Error making request: {str(error)}")
+
     except Exception as error:
         return error_response(f"Error making request: {str(error)}")
 
